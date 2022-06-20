@@ -18,32 +18,26 @@ export class TasksService {
     private taskRepository: Repository<Task>,
   ) {}
 
-  // getAllTasks(): Task[] {
-  //   return this.tasks;
-  // }
+  async getAllTasks(filterDto: GetTaskFilterDto): Promise<Task[]> {
+    const { status, search } = filterDto;
+    const query = this.taskRepository.createQueryBuilder('task');
 
-  // getTasksWithFilters(filterDto: GetTaskFilterDto): Task[] {
-  //   const { status, search } = filterDto;
-  //   let tasks = this.getAllTasks();
+    if (status) {
+      query.andWhere('task.status = :status', { status });
+    }
 
-  //   if (status) {
-  //     tasks = tasks.filter((task) => task.status === status);
-  //   }
+    if (search) {
+      query.andWhere(
+        '(task.title LIKE :search OR task.description LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
 
-  //   if (search) {
-  //     tasks = tasks.filter(
-  //       (task) =>
-  //         task.title.includes(search) || task.description.includes(search),
-  //     );
-  //   }
-
-  //   return tasks;
-  // }
+    const tasks = await query.getMany();
+    return tasks;
+  }
 
   async getTaskById(id: number): Promise<Task> {
-    // const found = await this.taskRepository.findOne({
-    //   where: { id },
-    // });
     const found = await this.taskRepository.findOneBy({ id });
 
     if (!found) {
